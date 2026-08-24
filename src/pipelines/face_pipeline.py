@@ -22,7 +22,7 @@ def load_dlib_models():
 
 def get_face_embedding(image_np):
     detector, sp, facerec = load_dlib_models()
-    faces=detector(image_np,0)
+    faces=detector(image_np,1)
     
     encodings=[]
     
@@ -52,7 +52,7 @@ def get_trained_model():
     if len(X)==0:
         return 0
     
-    clf=SVC(kernel='linear', probability=True, class_weight='balanced')
+    clf=SVC(kernel='linear', class_weight='balanced')
     
     try:
         clf.fit(X,y)
@@ -86,7 +86,7 @@ def predict_attendence(class_image_np):
             predicted_id=int(all_students[0])
             
         student_embedding = X_train[y_train.index(predicted_id)]
-        best_match_score=np.linalg.norm(student_embedding-encoding)
+        best_match_score=np.linalg.norm(student_embedding - encoding)
         resemblance_threshold=0.6
         
         if best_match_score <= resemblance_threshold:
