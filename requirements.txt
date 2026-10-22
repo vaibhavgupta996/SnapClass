@@ -7,7 +7,7 @@ pandas
 opencv-python-headless
 scipy
 
-# Face Recognition
+# Face Recognition & Biometrics
 scikit-learn
 dlib
 git+https://github.com/ageitgey/face_recognition_models
@@ -18,7 +18,7 @@ mediapipe
 supabase
 bcrypt
 
-# QR / Image
+# QR & Media
 segno
 Pillow
 
