@@ -1,3 +1,4 @@
+
 # Frontend
 streamlit
 
@@ -6,7 +7,7 @@ numpy<2.0.0
 pandas
 scipy
 
-# Computer Vision (Single Headless Build - No Conflicts)
+# Computer Vision
 opencv-python-headless==4.10.0.84
 
 # Biometrics & Facial Recognition
@@ -15,13 +16,13 @@ dlib
 git+https://github.com/ageitgey/face_recognition_models
 setuptools<70.0.0
 mediapipe==0.10.14
-protobuf<5.0.0,>=3.20.2
+protobuf>=3.20.2,<5.0.0
 
 # Database & Security
 supabase
 bcrypt
 
-# QR & Image
+# QR & Image Processing
 segno
 Pillow
 
