@@ -4,12 +4,14 @@ streamlit
 # Utilities
 numpy
 pandas
+opencv
 
 # Face Recognition
 scikit-learn
 dlib-bin
 git+https://github.com/ageitgey/face_recognition_models
 setuptools<70.0.0
+mediapipe
 
 # Database / Authentication
 supabase
