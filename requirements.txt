@@ -4,7 +4,7 @@ streamlit
 # Utilities
 numpy
 pandas
-opencv-python-headless
+opencv-contrib-python
 scipy
 
 # Face Recognition & Biometrics
