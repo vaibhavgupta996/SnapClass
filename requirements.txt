@@ -8,7 +8,7 @@ pandas
 scipy
 
 # Computer Vision
-opencv-python-headless==4.10.0.84
+opencv-contrib-python==4.10.0.84
 
 # Biometrics & Facial Recognition
 scikit-learn
