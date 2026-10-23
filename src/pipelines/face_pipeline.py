@@ -1,4 +1,3 @@
-import cv2
 import dlib
 import numpy as np
 import face_recognition_models
@@ -9,15 +8,12 @@ from src.database.db import get_all_students
 
 @st.cache_resource
 def load_dlib_models():
-    """Loads and caches dlib face detector, 68-point shape predictor, and recognition network."""
+    """Loads and caches dlib face detector, shape predictor, and recognition network."""
     detector = dlib.get_frontal_face_detector()
     
-    # 68-point landmark predictor is required for EAR (Eye Aspect Ratio) calculation
+    # 68-point model is needed for EAR eye points calculation
     try:
-        predictor_path = face_recognition_models.pose_predictor_model_location()
-        # Fallback/explicit check if 68 points model function is available
-        if hasattr(face_recognition_models, 'shape_predictor_68_face_landmarks_model_location'):
-            predictor_path = face_recognition_models.shape_predictor_68_face_landmarks_model_location()
+        predictor_path = face_recognition_models.shape_predictor_68_face_landmarks_model_location()
     except Exception:
         predictor_path = face_recognition_models.pose_predictor_model_location()
         
@@ -28,8 +24,17 @@ def load_dlib_models():
     return detector, sp, facerec
 
 
+def _to_grayscale(img_np):
+    """Replaces cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY) using pure NumPy."""
+    if len(img_np.shape) == 3 and img_np.shape[2] == 3:
+        # Standard ITU-R BT.601 conversion: Y = 0.2989 R + 0.5870 G + 0.1140 B
+        gray = np.dot(img_np[..., :3], [0.2989, 0.5870, 0.1140])
+        return gray.astype(np.uint8)
+    return img_np.astype(np.uint8)
+
+
 def _ensure_valid_image(img_np):
-    """Ensures image is uint8, contiguous and RGB format for dlib."""
+    """Ensures image is uint8, contiguous and compatible format for dlib."""
     if not isinstance(img_np, np.ndarray):
         img_np = np.array(img_np)
     if img_np.dtype != np.uint8:
@@ -41,12 +46,7 @@ def get_face_embedding(image_np):
     image_np = _ensure_valid_image(image_np)
     detector, sp, facerec = load_dlib_models()
     
-    # Convert to grayscale for detector
-    if len(image_np.shape) == 3 and image_np.shape[2] == 3:
-        gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
-    else:
-        gray = image_np
-        
+    gray = _to_grayscale(image_np)
     faces = detector(gray, 1)
     
     encodings = []
@@ -99,7 +99,7 @@ def calculate_ear(eye_points):
     # Vertical distances between upper and lower eyelids
     a = dist.euclidean(eye_points[1], eye_points[5])
     b = dist.euclidean(eye_points[2], eye_points[4])
-    # Horizontal distance across the eye corners
+    # Horizontal distance across eye corners
     c = dist.euclidean(eye_points[0], eye_points[3])
     
     if c == 0:
@@ -110,16 +110,12 @@ def calculate_ear(eye_points):
 def check_liveness(img_np):
     """
     Returns (is_live, message):
-    Validates single live face using landmarks and eye open/natural ratios.
+    Validates single live face using landmarks and eye aspect ratios.
     """
     img_np = _ensure_valid_image(img_np)
     detector, sp, _ = load_dlib_models()
     
-    if len(img_np.shape) == 3 and img_np.shape[2] == 3:
-        gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
-    else:
-        gray = img_np
-        
+    gray = _to_grayscale(img_np)
     faces = detector(gray, 0)
     
     if len(faces) == 0:
@@ -130,9 +126,8 @@ def check_liveness(img_np):
     landmarks = sp(gray, faces[0])
     points = np.array([(p.x, p.y) for p in landmarks.parts()])
     
-    # Check if 68 points are available (eyes are points 36..47)
+    # If 68-point model is not active, fallback safely
     if len(points) < 68:
-        # Fallback if 5-point model was loaded: basic face detected
         return True, "Live Face Verified (Basic)"
         
     left_eye = points[36:42]
@@ -142,7 +137,7 @@ def check_liveness(img_np):
     ear_right = calculate_ear(right_eye)
     avg_ear = (ear_left + ear_right) / 2.0
     
-    # Printed paper/closed eye spoof detection threshold
+    # Spoof / closed eye check
     if avg_ear < 0.18:
         return False, "Eyes closed or unnatural frame. Please blink and look straight."
         
